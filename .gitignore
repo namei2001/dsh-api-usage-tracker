@@ -1,0 +1,29 @@
+# Git ignore rules for the API Usage Tracker bundle
+
+# Dependencies / build artifacts
+node_modules/
+dist/
+build/
+*.tgz
+*.zip
+
+# Local environment & secrets (never commit real keys)
+.env
+.env.*
+!.env.example
+
+# Runtime data written by the Host (the bundle keeps its own copy outside
+# the repo, but these patterns guard against accidental local test data)
+*.jsonl
+spend.json
+settings.json
+layout.json
+
+# Logs & editor / OS noise
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

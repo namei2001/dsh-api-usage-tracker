@@ -1,0 +1,3 @@
+- insert:
+    - id: api-usage-tracker
+      name: '@local/api-usage-tracker'

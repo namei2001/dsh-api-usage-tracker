@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "API usage tracker",
+    "description": "Records every model API call and charts usage by time, provider, and model in a sidebar workbench."
+  }
+}
