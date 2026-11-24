@@ -1252,10 +1252,45 @@ window.__ModuleLoader__.load({
       /* Centred on both axes: the ring and its legend are one composition, so
          whatever height the cell happens to be, the pair sits in the middle of
          it instead of hugging the top edge and leaving a dead band below. */
-      .dsau-donut-b{display:flex;align-items:center;justify-content:center;gap:22px;flex:1 1 auto;min-height:0}
-      .dsau-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid ${C.lineSoft}}
-      .dsau-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;background:${C.surfaceHi};border:1px solid ${C.lineSoft};font-size:11px;color:${C.textLo};white-space:nowrap}
-      .dsau-chip i{width:5px;height:5px;border-radius:50%;background:${C.textFaint}}
+      /* The donut fills its panel: the wrapper is the flex column, the body is
+         the part that gets measured and fitted. Without this the measured height
+         was the content's own height rather than the room available, so the
+         column count never adapted. */
+      .dsau-donut{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+      .dsau-donut-b{display:flex;align-items:center;justify-content:center;gap:22px;flex:1 1 auto;min-height:0;overflow:hidden}
+      /* The donut legend reflows into as many columns as the cell can hold.
+         It used to be one fixed column, so the moment a module was shorter than
+         its list the last providers were simply cut off — the panel clips its
+         overflow, so the information vanished instead of moving. The column
+         count is measured per cell (see the Donut component) and handed down as
+         --dsau-legcols; 1 is only the pre-measurement fallback.
+         Scoped to .dsau-donut-b on purpose: the legend inside a quota card is a
+         different widget and must stay a single column so five cards read alike. */
+      .dsau-donut-b .dsau-rleg{display:grid;grid-auto-flow:column;grid-template-rows:repeat(var(--dsau-legrows,6),max-content);grid-template-columns:repeat(var(--dsau-legcols,1),minmax(var(--dsau-legmin,0px),1fr));gap:3px 16px;align-content:center;align-items:start;justify-items:stretch;min-width:0;overflow:hidden}
+      /* Rows are sized to their CONTENT (max-content), never to a fraction of
+         the box. With minmax(0,auto) the grid was allowed to compress every row
+         below the height of the two lines it contains, so the name line and the
+         value line of one entry overlapped the next entry's row — the legend
+         looked like stray percentages floating above the wrong provider. The
+         component already proves rows x row-height fit the cell, so a row can
+         simply be as tall as its text. */
+      /* The ring gives up diameter to make room for a second or third legend
+         column. The old fixed 104px ring left the legend too little width to
+         split, so a wide module showed one cramped column and a short module
+         showed the same column cut off. */
+      .dsau-donut-b .dsau-ring{--dsau-ring:var(--dsau-donut-ring,104px)}
+      .dsau-donut-b .dsau-rleg-row{padding:0 4px;margin:0 -4px}
+      /* The tag row is a single line that CLIPS, not a wrapping block that grows.
+         The pills used to be rigid: nowrap, real padding, and a wrap container,
+         so ten providers became three rows of tags that shoved the legend out of
+         the panel — which is what made a "便签" (little note) look bigger and
+         harder than the chart it was annotating. They are annotations: one line,
+         smaller type, ellipsis, and the whole row is dropped by the component the
+         moment it would cost the legend a provider. */
+      .dsau-chips{display:flex;flex-wrap:nowrap;gap:6px;margin-top:10px;padding-top:9px;border-top:1px solid ${C.lineSoft};overflow:hidden;min-height:0;flex:0 0 auto}
+      .dsau-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:999px;background:${C.surfaceHi};border:1px solid ${C.lineSoft};font-size:10.5px;line-height:1.5;color:${C.textLo};white-space:nowrap;flex:0 1 auto;min-width:0;max-width:190px}
+      .dsau-chip-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+      .dsau-chip i{width:5px;height:5px;border-radius:50%;background:${C.textFaint};flex:0 0 auto}
       .dsau-chip.registered i{background:${C.azure}}
       .dsau-chip.active i{background:${C.signal}}
       .dsau-chip.active{color:${C.textMd};border-color:${C.line}}
@@ -1490,13 +1525,24 @@ window.__ModuleLoader__.load({
     /* A cell this small cannot host a 104px ring beside a legend; the ring is
        shrunk to what the cell allows and the legend takes the rest. */
     .dsau-mod[data-density="sm"] .dsau-ring{--dsau-ring:56px}
-    .dsau-mod[data-density="sm"] .dsau-rleg{gap:2px}
+    /* The donut keeps a larger ring than a quota card's, because its legend sits
+       beside it and the two must still balance; the density rule above is
+       overridden here rather than left to win by specificity. */
+    .dsau-mod[data-density="sm"] .dsau-donut-b .dsau-ring{--dsau-ring:var(--dsau-donut-ring,82px)}
+    /* Tightening the row gap is right for a card's stacked legend, but the same
+       rule also stripped the COLUMN gap from the donut's multi-column legend,
+       which put a name right against the previous column's number. Scoped to the
+       card body, with the donut keeping a real column gutter. */
+    .dsau-mod[data-density="sm"] .dsau-qbody .dsau-rleg{gap:2px}
+    .dsau-mod[data-density="sm"] .dsau-donut-b .dsau-rleg{gap:2px 14px}
     /* The ring is the tallest thing a quota card holds, so the card body clips
        rather than letting the ring bleed over its own legend. */
     .dsau-mod[data-density="sm"] .dsau-qbody{overflow:hidden}
     .dsau-mod[data-density="sm"] .dsau-mtag{min-width:22px;height:15px;font-size:8.5px}
-    .dsau-donut-b .dsau-ring{--dsau-ring:104px}
-    .dsau-mod[data-density="sm"] .dsau-donut-b .dsau-ring{--dsau-ring:82px}
+    /* The donut's diameter is owned by the --dsau-donut-ring variable so the
+       component can trade ring for legend columns; a density tier only lowers
+       that variable, it never hard-codes a diameter of its own. */
+    .dsau-mod[data-density="sm"] .dsau-donut-b{--dsau-donut-ring:82px}
     .dsau-mod[data-density="sm"] .dsau-mlist{gap:9px}
     .dsau-mod[data-density="sm"] .dsau-mrow-top{margin-bottom:5px}
     .dsau-mod[data-density="sm"] .dsau-mfoot{margin-top:5px;padding-top:7px}
@@ -1532,7 +1578,15 @@ window.__ModuleLoader__.load({
     .dsau-mods.is-editing>.dsau-mod{outline:1px solid ${C.lineSoft};outline-offset:-1px;transition:outline-color .16s ${C.ease}}
     .dsau-mods.is-editing>.dsau-mod:hover{outline-color:${C.lineStrong}}
     .dsau-mods.is-editing>.dsau-mod:focus-visible{outline:2px solid ${C.signal};outline-offset:-1px}
-    .dsau-mod-chrome{position:absolute;top:0;left:0;right:0;height:26px;display:flex;align-items:center;gap:8px;padding:0 8px 0 4px;z-index:8;pointer-events:none;border-radius:16px 16px 0 0;background:linear-gradient(to bottom,rgba(10,14,19,.94),rgba(10,14,19,.66) 60%,transparent)}
+    .dsau-mod-chrome{position:absolute;top:0;left:0;right:0;height:26px;display:flex;align-items:center;gap:8px;padding:0 8px 0 4px;z-index:8;pointer-events:none;border-radius:16px 16px 0 0;background:linear-gradient(to bottom,rgba(10,14,19,.94),rgba(10,14,19,.66) 60%,transparent);opacity:0;transition:opacity .16s ${C.ease}}
+      /* The chrome sits ON TOP of the panel, so its module name used to print
+         straight over the panel's own title — two nearly identical labels
+         overlapping in the same corner. It is scaffolding, not content: it
+         appears while the pointer is on the module (or the module has focus via
+         the keyboard) and is gone otherwise. */
+      .dsau-mods.is-editing>.dsau-mod:hover>.dsau-mod-chrome,
+      .dsau-mods.is-editing>.dsau-mod:focus-within>.dsau-mod-chrome,
+      .dsau-mods.is-editing>.dsau-mod:focus-visible>.dsau-mod-chrome{opacity:1}
       .dsau-mod-chrome>*{pointer-events:auto}
     .dsau-grip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:18px;padding:0;border:0;border-radius:5px;background:transparent;color:${C.textFaint};cursor:grab;touch-action:none}
     .dsau-grip:hover{background:${C.surfaceHi};color:${C.signal}}
@@ -1710,11 +1764,78 @@ window.__ModuleLoader__.load({
         pct: `${(drawnTotal > 0 ? (x.tokens / drawnTotal) * 100 : 0).toFixed(1)}%`,
         sub: compact(x.tokens),
       }));
-      return h('div', null,
-        h('div', { className: 'dsau-donut-b' },
+      /* ---- Fit the composition to the cell -------------------------------
+         Everything here is measured from the wrapper, never assumed. A module
+         can be dragged to any height, so the parts have to take turns giving
+         way, in a fixed order:
+           1. the CHIP ROW goes first — the tags are the least informative
+              thing in the panel and they used to be rigid (nowrap pills that
+              wrapped into two rows), so a short module spent its whole body on
+              tags and then clipped the legend under them;
+           2. the RING gives up diameter;
+           3. the LEGEND adds columns, taking a narrower minimum only if it has
+              to, so rows x columns always covers every provider.
+         The previous version sized the legend from the height alone and then
+         let the grid overflow its box, which showed a legend cut off on the
+         left with providers missing entirely. The search below instead picks
+         the first layout that PROVABLY fits both dimensions. */
+      const [wrapRef, wrapW, wrapH] = useBoxSize(560, 220, 120);
+      /* One legend row is a name line plus a value line: 10.5px type at the
+         document's 1.6 line-height (16.8) over 9.5px type at 1.25 (11.9), i.e.
+         ~29px of text, ~2px of row padding and a 3px grid gutter. 34 covers the
+         row AND its share of that gutter, so "rows x 34 fits" really does fit
+         instead of dropping the last line by a few pixels. */
+      const ROW_PX = 34;
+      const CHIP_H = 46;                // one chip row incl. its rule, gap and line
+      const RING_MAX = 104, RING_MIN = 52;
+      /* GUTTER must equal .dsau-donut-b's gap, otherwise the search can accept a
+         layout that the browser then has to squeeze by 4px. */
+      const LEG_MIN = 168, LEG_TIGHT = 124, GUTTER = 22;
+      const n = series.length;
+      /* A single search, run twice: once with the chip block and once without.
+         The tags sit BELOW the legend and carry the same information in a longer
+         form, so they are the part that may disappear; the legend may not. The
+         with-chips attempt is kept only if it still fits every provider. */
+      const findFit = (availH) => {
+        for (const legMin of [LEG_MIN, LEG_TIGHT]) {
+          for (let cols = 1; cols <= Math.max(1, n); cols++) {
+            const rows = Math.ceil(n / cols) || 1;
+            if (rows * ROW_PX > availH + 2) continue;      // too tall: add a column
+            const roomForRing = wrapW - cols * legMin - GUTTER;
+            if (roomForRing < RING_MIN) continue;          // too wide: give up on this legMin
+            const ring = clampN(Math.min(RING_MAX, availH - 2, roomForRing), RING_MIN, RING_MAX);
+            return { cols, rows, ring, legMin };
+          }
+        }
+        return null;
+      };
+      const withChips = chips && chips.length ? findFit(Math.max(24, wrapH - CHIP_H)) : null;
+      const showChips = Boolean(withChips);
+      const fit = withChips || findFit(Math.max(24, wrapH)) || (() => {
+        /* Nothing fits both ways — a cell this small cannot hold a ring and six
+           readable entries. Do not let the legend run off the RIGHT edge, which
+           is the worst artefact of all: it produces text clipped mid-word with
+           the numbers gone. Widen the columns until the row ends inside the box
+           and accept that the last rows fall outside the bottom; a cell this
+           small is not a chart, but it still should not leak. */
+        const usable = Math.max(LEG_TIGHT, wrapW - RING_MIN - GUTTER);
+        const cols = clampN(Math.floor(usable / LEG_TIGHT), 1, Math.max(1, n));
+        return { cols, rows: Math.max(1, Math.ceil(n / cols)), ring: RING_MIN, legMin: LEG_TIGHT };
+      })();
+      const bodyH = Math.max(24, wrapH - (showChips ? CHIP_H : 0));
+      return h('div', { className: 'dsau-donut', ref: wrapRef },
+        h('div', {
+          className: 'dsau-donut-b',
+          style: {
+            '--dsau-legcols': fit.cols,
+            '--dsau-legrows': fit.rows,
+            '--dsau-legmin': `${fit.legMin}px`,
+            '--dsau-donut-ring': `${fit.ring}px`,
+          },
+        },
           h(Ring, {
             pct: drawnTotal > 0 ? (top.tokens / drawnTotal) * 100 : 0,
-            size: 104,
+            size: fit.ring,
             color: series.length ? series[0].color : C.signal,
             label: top && drawnTotal > 0 ? `${((top.tokens / drawnTotal) * 100).toFixed(1)}%` : '',
             sub: top ? top.name : undefined,
@@ -1722,13 +1843,13 @@ window.__ModuleLoader__.load({
             compose: true,
           }),
         ),
-        chips && chips.length > 0 ? h('div', { className: 'dsau-chips' },
+        showChips ? h('div', { className: 'dsau-chips' },
           chips.map((c) => h('span', {
             key: c.id,
             className: `dsau-chip${c.more ? ' more' : ''}${c.active ? ' active' : c.registered ? ' registered' : ''}`,
-            title: c.title || '',
+            title: c.title || c.label,
           }, c.more ? null : h('i', { style: { background: (tintOf && tintOf(c.id)) || undefined } }),
-            c.active ? `${c.label} · ${t.activeShort}` : c.label)),
+            h('span', { className: 'dsau-chip-t' }, c.active ? `${c.label} · ${t.activeShort}` : c.label))),
         ) : null,
       );
     }
@@ -1745,7 +1866,7 @@ window.__ModuleLoader__.load({
          anything. Each gets an equal slice of the circle and fills only as far as
          its own consumption reaches, so all of them are still coloured arcs — an
          arc of length "half of its slice" means "half way to the limit". */
-    function Ring({ pct, size, label, sub, color, series, compose }) {
+    function Ring({ pct, size, label, sub, color, series, compose, labelColor }) {
       const S = size || 88;
       const CIRC = 100, R = 15.9155, CX = 21, SW = 4.2;
       const [hover, setHover] = React.useState(null);
@@ -1844,7 +1965,15 @@ window.__ModuleLoader__.load({
             style: { transition: `stroke-dasharray .6s ${C.ease}` },
           })),
         h('div', { className: 'dsau-ring-t' },
-          label === '' || label == null ? null : h('span', { className: 'dsau-ring-v' }, label),
+          label === '' || label == null ? null : h('span', {
+            className: 'dsau-ring-v',
+            /* The centre number is the one figure a glance reads, and for an
+               overdrawn wallet it is a NEGATIVE amount — the case the theme's
+               neutral "high text" colour would render as a harmless balance.
+               Callers may therefore tint it, and the wallet card passes the
+               danger colour when the balance is below zero. */
+            style: labelColor ? { color: labelColor } : undefined,
+          }, label),
           sub ? h('span', { className: 'dsau-ring-s' }, sub) : null));
       const legend = list.length ? h('div', { className: 'dsau-rleg' },
         list.map((s, i) => {
@@ -1915,6 +2044,13 @@ window.__ModuleLoader__.load({
         const org = id === 'openai' ? orgUsage : undefined;
         const credits = q && q.credits;
         const wallets = q && q.balances && q.balances.length ? q.balances : null;
+        /* A wallet is decided by its PRESENCE, before anything is computed from
+           its parts: the ring and the headline both branch on it, and branching
+           on the derived series instead meant a wallet with nothing left fell
+           through to the generic gauge and lost its number. */
+        const walletParts = wallets ? wallets[0] : null;
+        const walletTotal = walletParts ? (walletParts.toppedUp || 0) + (walletParts.granted || 0) : 0;
+        const isWallet = Boolean(walletParts);
         const windows = q && q.windows && q.windows.length ? q.windows : null;
         const error = q && !q.ok && !q.pending
           ? (q.error === 'no-credential' ? t.quotaNoCredential
@@ -1924,7 +2060,21 @@ window.__ModuleLoader__.load({
         const empty = !q && (!local || local.periodCalls === 0);
         const hasMeter = Boolean(credits || wallets || windows || (org && org.ok));
         const pctColor = (pct) => (pct >= 90 ? C.danger : pct >= 70 ? C.warn : C.signal);
-        const moneyOf = (w, v) => (w.currency === 'CNY' ? '¥' : w.currency === 'USD' ? '$' : '') + (Number(v) || 0).toFixed(2);
+        /* A wallet balance can legitimately be NEGATIVE — the provider's own
+           console shows "-¥0.03" when the last request overdraws it. Two things
+           follow, and both were wrong here:
+             1. the sign is part of the number, so the minus goes BEFORE the
+                currency symbol (¥-0.03 reads like a malformed amount);
+             2. a non-positive total is not "no wallet data". Gating the wallet
+                branch on `total > 0` made a debt fall through to the generic
+                gauge, which drew a full circle with an EMPTY centre — the number
+                was simply not displayed anywhere on the card. */
+        const moneyOf = (w, v) => {
+          const n = Number(v) || 0;
+          const sym = w.currency === 'CNY' ? '¥' : w.currency === 'USD' ? '$' : '';
+          const abs = `${sym}${Math.abs(n).toFixed(2)}`;
+          return n < 0 && Math.abs(n).toFixed(2) !== '0.00' ? `-${abs}` : abs;
+        };
         const fmtCredit = (v) => (Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''));
         /* Packages take their hues from the shared series order, so the first
            package is the same colour on every card and across sessions. */
@@ -1954,6 +2104,12 @@ window.__ModuleLoader__.load({
         const ringPct = headline != null ? headline
           : creditLeft != null ? creditLeft
           : (org && org.ok && budget > 0) ? clampN(((org.costUsd || 0) / budget) * 100, 0, 100)
+          /* A wallet has no ceiling, so there is no percentage to fill — but the
+             generic 100% fallback painted a FULL circle for a wallet that was
+             merely empty or overdrawn, which reads as "all used up" for an
+             account that still holds money. Empty draws nothing; negative is a
+             debt and is the one case that does deserve the danger ring. */
+          : wallets ? (walletTotal < 0 ? 100 : 0)
           : 100;
         const ringLabel = headline != null ? `${Math.round(headline)}%`
           : creditLeft != null ? `${Math.round(creditLeft)}%`
@@ -1962,6 +2118,7 @@ window.__ModuleLoader__.load({
         const ringColor = headline != null ? pctColor(headline)
           : creditLeft != null ? (creditLeft <= 10 ? C.danger : creditLeft <= 30 ? C.warn : C.signal)
           : (org && org.ok && budget > 0) ? pctColor(((org.costUsd || 0) / budget) * 100)
+          : wallets ? (walletTotal < 0 ? C.danger : C.signalDim)
           : C.signalDim;
         /* A composition ring needs a magnitude in the middle: the arcs say how the
            credits are split, and the number says how many are left. A percentage
@@ -1995,9 +2152,14 @@ window.__ModuleLoader__.load({
            card gets the same ring as every other card — and the same slot colours,
            so the first part is the same hue here as the first package or the first
            limit on the cards beside it. */
-        const walletParts = wallets ? wallets[0] : null;
-        const walletTotal = walletParts ? (walletParts.toppedUp || 0) + (walletParts.granted || 0) : 0;
-        const walletSeries = walletTotal > 0 ? [
+        /* A composition can only be drawn from PARTS that exist and are
+           positive. A wallet at zero, or one that has gone into debt, has
+           nothing to divide: its parts would sum to something that is not a
+           whole, and the legend would then divide by that non-total and print
+           an infinite share. Such a wallet draws no arcs and no legend — but it
+           is still a wallet, and its number still belongs in the centre; see
+           ringMain below. */
+        const walletSeries = walletParts && walletTotal > 0 ? [
           { key: 'topup', value: walletParts.toppedUp || 0, color: seriesColor(0), label: t.balanceToppedUp, sub: moneyOf(walletParts, walletParts.toppedUp || 0) },
           { key: 'granted', value: walletParts.granted || 0, color: seriesColor(1), label: t.balanceGranted, sub: moneyOf(walletParts, walletParts.granted || 0) },
         ] : null;
@@ -2014,12 +2176,15 @@ window.__ModuleLoader__.load({
         const series = ringSegments || windowSeries || walletSeries || spendSeries;
         /* The centre states the magnitude each card is about: credits left, money
            left, or the tightest limit in percent. A percentage under a
-           composition arc would describe the ring, not the account. */
+           composition arc would describe the ring, not the account.
+           Keyed on `isWallet`, NOT on `walletSeries`: a wallet whose parts are
+           both zero has no arcs to draw but still owns the number, and gating
+           this on the series left that number out of the card entirely. */
         const ringMain = ringSegments ? fmtCredit(credits.total || 0)
-          : walletSeries ? walletMain
+          : isWallet ? walletMain
           : ringLabel;
         const ringSub = ringSegments ? t.creditsTotal
-          : walletSeries ? `${t.balanceTotal} · ${walletParts.currency}`
+          : isWallet ? `${t.balanceTotal} · ${walletParts.currency}`
           : (worst ? windowTag(worst, t) : undefined);
 
         return h('div', { className: `dsau-quota${empty ? ' is-empty' : ''}` },
@@ -2057,6 +2222,9 @@ window.__ModuleLoader__.load({
             h(Ring, {
               pct: ringPct, color: ringColor, label: ringMain, sub: ringSub, size: 76,
               series, compose: Boolean(ringSegments || walletSeries),
+              /* A negative balance is the only figure on this board that is bad
+                 news on its own, so it is the only one that colours the number. */
+              labelColor: isWallet && walletTotal < 0 ? C.danger : undefined,
             }),
           ) : null,
 

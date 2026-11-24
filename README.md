@@ -1,83 +1,322 @@
-# API Usage Tracker（DSH API 用量统计）
+<div align="center">
 
-> 一个 [DSH（agent runtime）](https://github.com/) 插件包：记录每一次模型 API 调用，并在侧边栏工作台中按时间、提供方、模型等维度统计用量、配额与花费。
+# API Usage Tracker
 
-![license](https://img.shields.io/badge/license-MIT-blue.svg)
-![runtime](https://img.shields.io/badge/runtime-DSH%20plugin-brightgreen.svg)
+> **中文** · [English](README.en.md)
 
-## 简介
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![runtime](https://img.shields.io/badge/runtime-DSH%20bundle-brightgreen.svg)](https://github.com/deepseek-ai/deepseek-harness)
+[![node](https://img.shields.io/badge/node-%E2%89%A518-339933.svg)](https://nodejs.org/)
+[![version](https://img.shields.io/badge/version-3.23.0-orange.svg)](package.json)
 
-这个插件挂在 DSH 的 `llm/stream` 事件上，把每次模型调用的关键元数据写入本地
-JSONL 记录，并在 Web GUI 中提供一个可自由排布的工作台来展示这些数据。它还能
-读取你在 DSH 中已登录服务的剩余配额/余额，并在配置了 OpenAI Admin Key 后展示
-组织级的用量与费用。
+**A local usage meter for [DeepSeek Harness (DSH)](https://github.com/deepseek-ai/deepseek-harness): every model call recorded, every token and quota accounted for — right in the sidebar.**
 
-**它不是普通的 Python 项目**：它遵循 DSH 的 **插件包（Cordis bundle）** 规范，
-本质是一个纯 JavaScript（ESM）包，因此本项目中的 `pyproject.toml`、`src/`、
-`Dockerfile` 等模板条目被适配为等价的插件工程结构（见下方[结构对照](#项目结构与标准模板对照)）。
+**一个运行在 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai/deepseek-harness) 内的本地用量统计插件：逐次记录模型调用，在侧边栏里看清每一个 token、每一份配额与余额。**
 
-## 功能特性
+</div>
 
-- **逐次调用记录**：每次 LLM 调用生成一条 JSONL 记录（时间、提供方、模型、会话、用途、输入/输出/缓存 token、结束原因、耗时）。
-- **八模块工作台**：总览、用量趋势、提供方占比、配额与余额、按时段请求数、模型分布、活跃度热力图、最近调用；模块可拖拽/缩放，布局自动保存。
-- **配额与余额探测**：支持 Kimi Coding、Kimi Coding Global、DeepSeek 官方、DeepSeek 账号、MiniMax 国内版、WorkBuddy（复用 DSH 已登录会话，无需在本插件里填写这些服务的密钥）。
-- **OpenAI 组织用量/费用**：按月（UTC）查询用量与成本，可配置月度预算进度条。
-- **本地花费追踪**：对于只返回余额的服务，通过余额下降累加出“已花费”（仅本地统计）。
-- **数据导出与清空**：一键导出 JSON 快照、清空本地调用记录。
-- **双语界面**：英文 / 中文自动切换。
+---
 
-## 快速开始
+## 目录 / Contents
 
-### 安装
+- [English](#english)
+- [中文](#中文)
+- [Repository layout / 仓库结构](#repository-layout--仓库结构)
+- [License / 许可证](#license--许可证)
 
-这是一个**本地 DSH 插件包**，不能独立运行。
+---
 
-1. 通过插件管理器安装（推荐）：使用 `plugin_manager`，`action: "install_bundle"`，`target` 为本目录的**绝对路径**；
-2. 或在 Web GUI 中：**插件 → 添加插件 → 本地目录**，选择包含 `package.json` 的本文件夹。
+<a id="english"></a>
 
-启用插件后重启 DSH 或刷新 Web GUI，左侧栏会出现 **API usage tracker / API 用量统计** 面板，点击即可打开工作台。
+## English
 
-### 配置 OpenAI Admin Key（可选）
+### What it is
 
-在工作台的“模型”区域底部（或 **设置 → 模型** 页脚）找到 **OpenAI Admin Key** 卡片，粘贴密钥并保存。密钥存入 DSH 凭据系统（引用名 `OPENAI_ADMIN_KEY`），**只写不读**：插件不会把密钥回显到界面或写入日志。清除也从同一张卡片操作。
+API Usage Tracker is a **local DSH plugin bundle (Cordis bundle)** — it is not a
+standalone app and it is not a Python project. It hooks into DSH's `llm/stream`
+event, appends one compact metadata record per model call to a local JSONL file,
+and renders an interactive workbench in the DSH Web GUI sidebar.
 
-> 更详细的逐步说明见 [`docs/usage.md`](docs/usage.md)。
+Because it runs inside DSH, it can also reuse the sessions you are already
+logged in with to read remaining quotas and wallet balances — no extra API keys
+needed for those providers. Optionally, an OpenAI Admin Key enables
+organization-level usage and cost reporting.
 
-## 界面速览
+> **Zero runtime dependencies**: Preact, Cordis and the module loader are all
+> supplied by the DSH host. There is nothing to `npm install`.
 
-| 区域 | 内容 |
-| --- | --- |
-| 侧栏面板 | 工作台入口（柱状图图标，固定在侧栏列表 order 20） |
-| 总览 `ov` | 调用总数、token 总量、近期活动 |
-| 用量趋势 `trend` | 请求与 token 随时间变化 |
-| 提供方占比 `donut` | 各提供方用量饼图 |
-| 配额与余额 `quota` | 各服务剩余额度窗口与钱包余额 |
-| 请求时段 `hourly` | 每天按小时的调用直方图 |
-| 模型 `model` | 按模型拆分的 token 使用 |
-| 活跃度 `heat` | 时段 × 星期的活跃热力图 |
-| 最近调用 `table` | 每次调用的时间、提供方、模型、token、耗时 |
+### Features
 
-## 项目结构与标准模板对照
+- **Per-call records** — one JSONL line per LLM call: timestamp, provider,
+  model, session, purpose, input/output/cache/reasoning tokens, finish reason
+  and duration. Metadata only — no prompts, no response bodies.
+- **Eight-tile workbench** — Overview, Usage trend, Provider share, Quota &
+  balance, Requests by hour, Models, Activity heatmap, Recent calls. Tiles are
+  drag-and-drop, resizable, and the layout is saved on the host.
+- **Adaptive provider-share chart** — the donut measures its own cell and
+  reflows its legend into as many columns as fit, shrinking the ring and finally
+  dropping the annotation chips only when necessary. No more clipped providers
+  when a tile is short or narrow.
+- **Quota & balance probes** — Kimi Coding, Kimi Coding Global, DeepSeek
+  Official, DeepSeek Account, MiniMax CN and WorkBuddy, using your existing DSH
+  sessions. Results are cached for two minutes; force-refresh from the toolbar.
+- **Wallet-aware balances** — provider wallets (top-up + granted funds) are
+  drawn as composition rings with the amount in the centre; a negative balance
+  is coloured as debt and formatted correctly as `-¥0.03` (not `¥-0.03`).
+- **OpenAI organization usage/costs** — month-to-date (UTC) usage and cost with
+  an optional monthly budget progress bar, using an Admin Key stored in DSH
+  credentials.
+- **Local spend tracking** — for providers that expose only a balance, spend is
+  accumulated locally from balance drops (`spend.json`).
+- **Export & clear** — one-click JSON snapshot export and one-click clear of
+  local call records.
+- **Permission-aware layout editing** — module drag handles and name chrome
+  appear only while editing or on hover/focus, so they never overlap a tile's
+  own title.
+- **Bilingual UI** — English / Chinese, detected from the DSH context.
 
-标准 Python 项目模板与本插件包结构的对应关系如下：
+### Install & enable
 
-| 标准模板条目 | 本项目 | 说明 |
+1. **Plugin manager (recommended)** — call `plugin_manager` with
+   `action: "install_bundle"` and `target` set to the **absolute path** of this
+   directory.
+2. **Web GUI** — **Plugins → Add plugin → local directory**, then select the
+   folder containing `package.json`.
+
+Restart DSH or refresh the Web GUI. A panel labelled **API usage tracker** opens
+from the left sidebar (bar-chart icon, order 20).
+
+### Quick start
+
+1. Install and enable the bundle (above), then open the sidebar panel.
+2. Use the toolbar to pick a time range, force-refresh quotas, export JSON or
+   clear local records.
+3. Drag a tile's edge to resize; the layout is saved automatically.
+4. **Optional — OpenAI Admin Key**: at the bottom of the Models area, or under
+   **Settings → Models**, find the **OpenAI Admin Key** card, paste the key and
+   save.
+
+The key is stored in the DSH credential system under the reference name
+`OPENAI_ADMIN_KEY`. It is **write-only**: the bundle never echoes it back to the
+UI, writes it to logs, or drops it into the project. Clear it from the same card.
+
+### Workbench modules
+
+The workbench is a 24-column grid with eight modules:
+
+| ID | Module | What it shows |
 | --- | --- | --- |
-| `.github/workflows/` | ✅ `.github/workflows/ci.yml` | Node 语法检查 + `node:test` |
-| `docs/` | ✅ `docs/usage.md`、`docs/architecture.md` | 使用指南与架构说明 |
-| `scripts/` | ✅ `scripts/check-bundle.js` | 无需依赖的清单/结构校验脚本 |
-| `src/your_package/` | ✅ 根目录 `index.js` / `client.js` | DSH 插件包约定源码位于根目录，无 `src/` 层 |
-| `tests/` | ✅ `test/bundle.test.js` | `node:test` 轻量测试 |
-| `.env.example` | ✅ | 仅列变量名，**不含真实密钥** |
-| `.gitignore` | ✅ | 忽略 `.env`、运行时数据、构建产物 |
-| `CHANGELOG.md` | ✅ | 版本变更记录 |
-| `CONTRIBUTING.md` | ✅ | 贡献与安装指南 |
-| `LICENSE` | ✅ | MIT |
-| `README.md` | ✅ 本文件 | 项目门面 |
-| `pyproject.toml` | ➡️ `package.json` | JS 等价：`exports` + `dsh.bundle.patch` + `dsh.client` |
-| `Dockerfile` | ➖ 不适用 | 插件运行在 DSH 宿主内，无需容器化 |
+| `ov` | Overview | Total calls, token totals, recent activity |
+| `trend` | Usage trend | Requests and tokens over time |
+| `donut` | Provider share | Adaptive donut of usage per provider |
+| `quota` | Quota & balance | Remaining quota windows and wallet balances |
+| `hourly` | Requests by hour | Daily request histogram by hour |
+| `model` | Models | Token usage broken down by model |
+| `heat` | Activity heatmap | Time-of-day × day-of-week density |
+| `table` | Recent calls | Time, provider, model, tokens, duration per call |
 
-完整目录：
+### Data & privacy
+
+The host writes under the DSH profile directory
+(`DSH_PROFILE_DIR` → `DSH_HOME` → `~/.deepseek-harness`):
+
+```
+<profile>/api-usage-tracker/
+├── records.jsonl   # one metadata record per call (no prompts/responses)
+├── settings.json   # OpenAI monthly budget (openaiBudgetUsd)
+├── layout.json     # saved workbench layout
+└── spend.json      # locally accumulated spend per wallet
+```
+
+- `records.jsonl` is capped at 50,000 lines; the oldest records are dropped.
+- **All data stays on your machine.** Records contain metadata only.
+- Clearing records removes only `records.jsonl`; export produces a JSON snapshot
+  of the current data.
+
+### Development & verification
+
+No `npm install` needed. With any Node.js ≥ 18:
+
+```bash
+node --check index.js
+node --check client.js
+node scripts/check-bundle.js     # manifest and file-integrity check
+node --test test/*.test.js       # zero-dependency tests
+```
+
+CI runs the manifest check and tests on `ubuntu-latest` with Node 20. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) before contributing; update
+[`CHANGELOG.md`](CHANGELOG.md) for behaviour changes.
+
+### FAQ
+
+- **No sidebar panel after install?** Check that `package.json`'s `files[]`
+  contains `index.js`, `client.js`, `cordis.patch.yml`, `icon.svg` and
+  `locale/*.json`; run `node scripts/check-bundle.js` to self-check, then
+  restart DSH or refresh the GUI.
+- **Quota unavailable?** Quota probes reuse DSH logins — sign in to the
+  provider in DSH first. Results are cached for two minutes; use the toolbar
+  refresh to force an update.
+- **OpenAI usage missing?** Confirm the Admin Key is set (see Quick start). The
+  key is a write-only reference, so it cannot be read back — set or clear it
+  again from the card.
+
+### Security notes
+
+- No real credentials are present in source. The Admin Key is an opaque DSH
+  credential reference, set/unset only and never read back to the client.
+- `.env.example` lists variable names only; `.env` is git-ignored.
+- All client requests are same-origin host routes (`/api-usage-tracker/*`);
+  upstream provider calls are made by the host.
+- `apply(ctx)` returns a disposer that releases every listener and route, so
+  uninstalling leaves nothing behind.
+
+---
+
+<a id="中文"></a>
+
+## 中文
+
+### 简介
+
+API Usage Tracker 是一个**本地 DSH 插件包（Cordis bundle）**——既不是独立应用，
+也不是 Python 项目。它挂在 DSH 的 `llm/stream` 事件上，每次模型调用追加一条精简的
+元数据记录到本地 JSONL 文件，并在 DSH Web GUI 侧栏提供一个可交互的工作台。
+
+由于运行在 DSH 内部，它还能复用你已登录的会话读取剩余配额与钱包余额——这些服务
+无需在本插件里另填密钥。可选地，配置 OpenAI Admin Key 后可展示组织级的用量与费用。
+
+> **零运行时依赖**：Preact、Cordis 与模块加载器均由 DSH 宿主提供，无需 `npm install`。
+
+### 功能特性
+
+- **逐次调用记录**：每次 LLM 调用生成一条 JSONL 记录（时间、提供方、模型、会话、
+  用途、输入/输出/缓存/推理 token、结束原因、耗时）。只含元数据，不含提示词或回复正文。
+- **八模块工作台**：总览、用量趋势、提供方占比、配额与余额、按时段请求数、模型分布、
+  活跃度热力图、最近调用；模块可拖拽/缩放，布局自动保存到 Host。
+- **自适应提供方占比图**：饼图会测量自身单元格，将图例按可用宽度自动排成多列；空间不足时
+  才缩小圆环、最后才丢弃注释标签。模块再窄再矮，也不会把提供方裁掉。
+- **配额与余额探测**：支持 Kimi Coding、Kimi Coding Global、DeepSeek 官方、
+  DeepSeek 账号、MiniMax 国内版、WorkBuddy——复用 DSH 已登录会话；结果缓存 2 分钟，
+  可在工具栏强制刷新。
+- **钱包余额可视化**：提供方钱包（充值 + 赠送）以组合圆环呈现，中间显示金额；负数余额会
+  以警示色显示为债务，并正确格式化为 `-¥0.03`（而非 `¥-0.03`）。
+- **OpenAI 组织用量/费用**：按月（UTC）查询用量与成本，可配置月度预算进度条；使用保存在
+  DSH 凭据中的 Admin Key。
+- **本地花费追踪**：对只返回余额的服务，通过余额下降在本地累计花费（`spend.json`）。
+- **导出与清空**：一键导出 JSON 快照、一键清空本地调用记录。
+- **权限感知的布局编辑**：拖拽手柄与模块名浮层只在编辑时或鼠标悬停/键盘聚焦时出现，
+  不会与模块自身标题重叠。
+- **双语界面**：英文 / 中文，跟随 DSH 上下文自动切换。
+
+### 安装与启用
+
+1. **插件管理器（推荐）**：调用 `plugin_manager`，参数 `action: "install_bundle"`，
+   `target` 为本目录的**绝对路径**。
+2. **Web GUI**：**插件 → 添加插件 → 本地目录**，选择包含 `package.json` 的本文件夹。
+
+重启 DSH 或刷新 Web GUI，左侧栏会出现 **API usage tracker / API 用量统计** 面板
+（柱状图图标，order 20），点击即可打开工作台。
+
+### 快速上手
+
+1. 安装并启用插件（见上），打开侧栏面板。
+2. 在工具栏选择时间范围、强制刷新配额、导出 JSON 或清空本地记录。
+3. 拖拽模块边缘可调整大小，布局会自动保存。
+4. **（可选）配置 OpenAI Admin Key**：在“模型”区域底部，或 **设置 → 模型** 中，
+   找到 **OpenAI Admin Key** 卡片，粘贴密钥并保存。
+
+密钥通过 DSH 凭据系统以引用名 `OPENAI_ADMIN_KEY` 保存，**只写不读**：插件不会把密钥
+回显到界面、写入日志或落盘到项目里；清除也从同一张卡片操作。
+
+### 工作台模块
+
+工作台是一个 24 列网格，包含八个模块：
+
+| ID | 模块 | 内容 |
+| --- | --- | --- |
+| `ov` | 总览 | 调用总数、token 总量、近期活动 |
+| `trend` | 用量趋势 | 请求与 token 随时间变化 |
+| `donut` | 提供方占比 | 自适应的各提供方用量饼图 |
+| `quota` | 配额与余额 | 各服务剩余额度窗口与钱包余额 |
+| `hourly` | 请求时段 | 每天按小时的调用直方图 |
+| `model` | 模型 | 按模型拆分的 token 使用 |
+| `heat` | 活跃度 | 时段 × 星期的活跃热力图 |
+| `table` | 最近调用 | 每次调用的时间、提供方、模型、token、耗时 |
+
+### 数据与隐私
+
+Host 端把数据写在 DSH 配置目录下（优先级 `DSH_PROFILE_DIR` → `DSH_HOME` → `~/.deepseek-harness`）：
+
+```
+<profile>/api-usage-tracker/
+├── records.jsonl   # 每次调用一条元数据记录（不含 prompt / 回复正文）
+├── settings.json   # OpenAI 月度预算（openaiBudgetUsd）
+├── layout.json     # 工作台布局
+└── spend.json      # 本地累计花费
+```
+
+- `records.jsonl` 上限 50,000 行，超出后丢弃最旧记录。
+- **所有数据仅存于本机**，记录只含元数据。
+- 清空记录只删除 `records.jsonl`；导出会生成当前数据的 JSON 快照。
+
+### 开发与校验
+
+无需 `npm install`。使用任意 Node.js ≥ 18：
+
+```bash
+node --check index.js
+node --check client.js
+node scripts/check-bundle.js     # 校验清单与文件完整性
+node --test test/*.test.js       # 运行测试（无第三方依赖）
+```
+
+CI 在 `ubuntu-latest` 上使用 Node 20 执行清单校验与测试。贡献前请阅读
+[`CONTRIBUTING.md`](CONTRIBUTING.md)，行为变更请同步更新 [`CHANGELOG.md`](CHANGELOG.md)。
+
+### 常见问题
+
+- **插件安装后侧栏没有面板？** 确认 `package.json` 中 `files[]` 包含 `index.js`、
+  `client.js`、`cordis.patch.yml`、`icon.svg`、`locale/*.json`；可运行
+  `node scripts/check-bundle.js` 自检，然后重启 DSH 或刷新 Web GUI。
+- **配额显示为不可用？** 配额探测复用 DSH 已登录会话，请先在 DSH 中登录对应提供方；
+  结果有 2 分钟缓存，可用工具栏的刷新按钮强制更新。
+- **OpenAI 用量不显示？** 请确认已设置 Admin Key（见快速上手）；密钥为只写引用，
+  界面无法回读，只能重新设置或清除。
+
+### 安全说明
+
+- 源码中不含任何真实凭据；Admin Key 通过 DSH 凭据引用管理，单向设置/清除，绝不回显给客户端。
+- `.env.example` 仅列出环境变量名；`.env` 已被 `.gitignore` 忽略。
+- 客户端所有请求均为同源的 Host 路由（`/api-usage-tracker/*`）；对上游服务的调用由 Host 完成。
+- `apply(ctx)` 返回的 disposer 会释放所有监听器与路由，卸载插件不会留下残留。
+
+---
+
+<a id="repository-layout--仓库结构"></a>
+
+## Repository layout / 仓库结构
+
+This is a JavaScript (ESM) bundle, so the Python-specific template entries are
+adapted to equivalent DSH plugin structure.
+
+这是一个 JavaScript（ESM）插件包，因此标准 Python 模板条目被适配为等价的 DSH 插件结构。
+
+| Standard template / 标准模板 | This project / 本项目 | Notes / 说明 |
+| --- | --- | --- |
+| `.github/workflows/` | ✅ `.github/workflows/ci.yml` | Node syntax/manifest check + tests / 语法与清单校验 + 测试 |
+| `docs/` | ✅ `docs/usage.md`, `docs/architecture.md` | Usage & architecture guides / 使用与架构说明 |
+| `scripts/` | ✅ `scripts/check-bundle.js` | Zero-dependency validator / 零依赖校验脚本 |
+| `src/your_package/` | ✅ root `index.js` / `client.js` | DSH bundles keep source at the root / DSH 插件源码位于根目录 |
+| `tests/` | ✅ `test/bundle.test.js`, `test/README.md` | `node:test` lightweight tests / 轻量测试 |
+| `.env.example` | ✅ | Variable names only, no secrets / 仅变量名，无密钥 |
+| `.gitignore` | ✅ | Ignores `.env`, runtime data, build output / 忽略环境变量、运行数据、构建产物 |
+| `CHANGELOG.md` | ✅ | Keep a Changelog format / 版本变更记录 |
+| `CONTRIBUTING.md` | ✅ | Contribution & install guide / 贡献与安装指南 |
+| `LICENSE` | ✅ | MIT |
+| `README.md` | ✅ `README.md` + `README.en.md` | Bilingual entry point / 双语入口 |
+| `pyproject.toml` | ➡️ `package.json` | JS equivalent: `exports` + `dsh.bundle.patch` + `dsh.client` |
+| `Dockerfile` | ➖ N/A | Runs inside the DSH host / 插件运行在 DSH 宿主内 |
 
 ```
 api-usage-tracker/
@@ -94,51 +333,22 @@ api-usage-tracker/
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── LICENSE
-├── README.md
+├── README.md            # 中文 + English
+├── README.en.md         # English only / 纯英文版
 ├── package.json
 ├── cordis.patch.yml
-├── index.js            # Host 端：记录、配额探测、路由
-├── client.js           # Web 端：侧栏面板、工作台、密钥卡片
+├── index.js             # Host: recording, quota probes, routes
+├── client.js            # Web: sidebar panel, workbench, key card
 ├── locale/
 │   ├── en.json
 │   └── zh.json
 └── icon.svg
 ```
 
-## 数据与方法
+---
 
-Host 端把数据写在 DSH 配置目录下（优先级 `DSH_PROFILE_DIR` → `DSH_HOME` → `~/.deepseek-harness`）：
+<a id="license--许可证"></a>
 
-```
-<profile>/api-usage-tracker/
-├── records.jsonl   # 每次调用一条记录（不含 prompt / 回复正文）
-├── settings.json   # OpenAI 月度预算
-├── layout.json     # 工作台布局
-└── spend.json      # 本地累计花费
-```
+## License / 许可证
 
-`records.jsonl` 上限 50,000 行（超出后丢弃最旧记录）。**所有数据仅存于本机**；
-记录只包含元数据，不含提示词或响应正文。清空记录只删除 `records.jsonl`。
-
-## 开发与校验
-
-无需 `npm install`（运行时依赖由 DSH 宿主提供）。使用任意 Node.js ≥ 18：
-
-```bash
-node --check index.js
-node --check client.js
-node scripts/check-bundle.js     # 校验清单与文件完整性
-node --test test/*.test.js       # 运行测试（无第三方依赖）
-```
-
-详情见 [`CONTRIBUTING.md`](CONTRIBUTING.md) 与 [`docs/architecture.md`](docs/architecture.md)。
-
-## 安全说明
-
-- 源码中不含任何真实凭据；Admin Key 通过 DSH 凭据引用管理，单向设置/清除。
-- `.env.example` 仅列出环境变量名；`.env` 已被 `.gitignore` 忽略。
-- 客户端所有请求均为同源的 Host 路由；对上游服务的调用由 Host 完成。
-
-## 许可证
-
-[MIT](LICENSE) © 2026 API Usage Tracker contributors
+[MIT](LICENSE) © 2026 API Usage Tracker contributors.

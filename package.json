@@ -1,9 +1,9 @@
 {
   "name": "@local/api-usage-tracker",
-  "version": "3.20.0",
+  "version": "3.23.0",
   "private": true,
   "type": "module",
-  "description": "Records every model API call and charts usage by time, provider, and model in a sidebar workbench.",
+  "description": "Local DSH bundle: records every model API call and charts usage, quotas, balances and spend in a bilingual sidebar workbench.",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
