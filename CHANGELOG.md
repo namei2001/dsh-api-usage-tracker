@@ -16,8 +16,8 @@ All notable changes to this bundle are documented in this file. Format follows
   formatted as `-¥0.03`, and the amount stays in the ring centre.
 - Module drag handles / name chrome appear only while editing, on hover or on
   keyboard focus, so they no longer overlap a tile's own title.
-- Rebuilt `README.md` as a bilingual (中文 + English) entry point and added a
-  standalone `README.en.md`, covering all current features, quick start,
+- Rebuilt `README.md` as the English primary entry point and added a standalone
+  `README.zh.md` Chinese edition, covering all current features, quick start,
   workbench modules, data/privacy, FAQ and the standard-template mapping.
 
 ## [3.20.0]

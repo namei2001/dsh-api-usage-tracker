@@ -51,7 +51,7 @@ for (const ref of ['locale/en.json', 'locale/zh.json']) {
   }
 }
 // Repo-level docs are expected in the source tree but need not ship in files[].
-for (const ref of ['README.md', 'README.en.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE']) {
+for (const ref of ['README.md', 'README.zh.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE']) {
   if (!existsSync(join(root, ref))) problems.push(`missing doc: ${ref}`)
 }
 
