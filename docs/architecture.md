@@ -50,6 +50,14 @@ api-usage-tracker/
   `table`), each a Preact component with drag/resize handles.
 - Bilingual UI: inline dictionaries `DICTS.en` / `DICTS.zh`, language detected
   from context; `locale/*.json` provide the plugin store metadata.
+- Theming: all workbench colours are routed through `--dsau-*` custom properties
+  with dark values as defaults. A scoped `body:not([data-ds-dark-theme]) .dsau-root`
+  block re-points DSH's `--dsw-alias-*` tokens (canvas, card layers, hairlines,
+  shadows) and the `--dsau-*` tokens for light mode. The ring groove
+  (`--dsau-track`), endpoint cut-out (`--dsau-chip-solid`), heatmap swatches
+  (`--dsau-heat0…4`), chip backgrounds and drag-handle chrome therefore follow
+  the host theme. When DSH theme tokens are absent, the dark defaults are used
+  as a safe fallback.
 
 ## Security notes
 

@@ -6,6 +6,24 @@ All notable changes to this bundle are documented in this file. Format follows
 
 ## [Unreleased]
 
+## [3.24.1]
+
+### Changed
+- Full light-theme support. Every colour in the workbench is now expressed through
+  CSS custom properties, so the light theme can re-point tokens in one scoped
+  block instead of at dozens of call sites.
+- On a light background the page uses a neutral-bluish canvas with white cards,
+  real shadows and stronger 10–18 % hairlines, so module boundaries no longer
+  disappear into a white-on-white board.
+- Inner quota/KPI cards drop to a faint grey and the heatmap swatches use light
+  variants, so a near-black "empty" cell no longer reads as a hole on a white
+  card.
+- Model tags are inverted in light mode (pale hue tint as ground, deep hue tint
+  as text) so monograms stay readable; legend dots, percentages and lintels are
+  darkened only where they are used as text.
+- The ring groove, chart endpoint cut-outs and drag-handle chrome route through
+  theme-aware custom properties instead of hard-coded dark colours.
+
 ## [3.23.0]
 
 ### Changed

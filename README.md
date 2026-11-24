@@ -3,7 +3,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![runtime](https://img.shields.io/badge/runtime-DSH%20bundle-brightgreen.svg)](https://github.com/deepseek-ai/deepseek-harness)
 [![node](https://img.shields.io/badge/node-%E2%89%A518-339933.svg)](https://nodejs.org/)
-[![version](https://img.shields.io/badge/version-3.23.0-orange.svg)](package.json)
+[![version](https://img.shields.io/badge/version-3.24.1-orange.svg)](package.json)
 
 **A local usage meter for [the agent runtime (DSH)](https://github.com/deepseek-ai/deepseek-harness): every model call recorded, every token and quota accounted for — right in the sidebar.**
 
@@ -69,6 +69,10 @@ organization-level usage and cost reporting.
   appear only while editing or on hover/focus, so they never overlap a tile's
   own title.
 - **Bilingual UI** — English / Chinese, detected from the DSH context.
+- **Light & dark theme aware** — every colour flows through CSS custom
+  properties; in light mode the board switches to a neutral canvas with white,
+  shadowed cards, readable text on pale backgrounds, inverted model tags and
+  themed heatmap cells, so no boundary or label disappears on white.
 
 ## Install & enable
 
@@ -158,6 +162,9 @@ CI runs the manifest check and tests on `ubuntu-latest` with Node 20. See
 - **OpenAI usage missing?** Confirm the Admin Key is set (see Quick start). The
   key is a write-only reference, so it cannot be read back — set or clear it
   again from the card.
+- **Colours look wrong in light mode?** The workbench follows DSH's theme via
+  `body[data-ds-dark-theme]`. If DSH's theme tokens are not present (older host
+  versions), the dark palette is used as a safe fallback.
 
 ## Security notes
 

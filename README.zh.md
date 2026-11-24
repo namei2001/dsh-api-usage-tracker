@@ -7,7 +7,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![runtime](https://img.shields.io/badge/runtime-DSH%20bundle-brightgreen.svg)](https://github.com/deepseek-ai/deepseek-harness)
 [![node](https://img.shields.io/badge/node-%E2%89%A518-339933.svg)](https://nodejs.org/)
-[![version](https://img.shields.io/badge/version-3.23.0-orange.svg)](package.json)
+[![version](https://img.shields.io/badge/version-3.24.1-orange.svg)](package.json)
 
 **一个运行在 DSH 内的本地用量统计插件：逐次记录模型调用，在侧边栏里看清每一个 token、每一份配额与余额。**
 
@@ -50,6 +50,7 @@ API Usage Tracker 是一个**本地 DSH 插件包（Cordis bundle）**——既�
 - **导出与清空**：一键导出 JSON 快照、一键清空本地调用记录。
 - **权限感知的布局编辑**：拖拽手柄与模块名浮层只在编辑时或鼠标悬停/键盘聚焦时出现，不会与模块自身标题重叠。
 - **双语界面**：英文 / 中文，跟随 DSH 上下文自动切换。
+- **明暗主题自适应**：所有颜色均通过 CSS 自定义属性表达；浅色模式下工作台切换为中性底画布、带阴影的白色卡片、在浅色背景上依然清晰可读的文字、反色处理的模型标签以及适配的热力图配色，任何边界或标签都不会在白底上消失。
 
 ## 安装与启用
 
@@ -121,7 +122,7 @@ api-usage-tracker/
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── LICENSE
-├── README.md            # 中文版
+├── README.md            # 英文主版
 ├── README.zh.md         # 中文版（本文件）
 ├── package.json
 ├── cordis.patch.yml
@@ -167,6 +168,7 @@ CI 在 `ubuntu-latest` 上使用 Node 20 执行清单校验与测试。贡献前
 - **插件安装后侧栏没有面板？** 确认 `package.json` 中 `files[]` 包含 `index.js`、`client.js`、`cordis.patch.yml`、`icon.svg`、`locale/*.json`；可运行 `node scripts/check-bundle.js` 自检，然后重启 DSH 或刷新 Web GUI。
 - **配额显示为不可用？** 配额探测复用 DSH 已登录会话，请先在 DSH 中登录对应提供方；结果有 2 分钟缓存，可用工具栏的刷新按钮强制更新。
 - **OpenAI 用量不显示？** 请确认已设置 Admin Key（见[快速上手](#快速上手)）；密钥为只写引用，界面无法回读，只能重新设置或清除。
+- **浅色模式下颜色异常？** 工作台通过 `body[data-ds-dark-theme]` 跟随 DSH 主题；若宿主版本较旧、缺少 DSH 主题变量，则会回退到深色配色，保证可用。
 
 ## 安全说明
 

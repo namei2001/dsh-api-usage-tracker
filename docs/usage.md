@@ -35,6 +35,10 @@ The workbench is a 24-column grid of eight tiles you can resize and rearrange
 Use the toolbar controls to change the time range, force-refresh quotas, export
 the data as JSON, or clear local records.
 
+The workbench follows DSH's light/dark theme automatically. In light mode the
+board uses a neutral canvas with white cards and visible separators, so module
+boundaries, text and charts stay readable; no configuration is needed.
+
 ## Quota probes
 
 The Host reads quota/balance from existing DSH sessions for these providers:

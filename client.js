@@ -16,7 +16,11 @@ window.__ModuleLoader__.load({
     const C = {
       signal: '#CBF27E', signalDim: '#9BC253', signalDeep: '#5E7D2C', signalInk: '#0A0E13',
       azure: '#7FB3E8', violet: '#B49AEC', ok: '#84D9A6', warn: '#EFB56C', danger: '#EE8177',
-      track: '#1C2834', barMute: '#4E6E82', ink: '#0A0E13',
+      /* track and ink are the two colours that were hard-coded dark: the ring's
+         groove and the "cut-out" stroke on chart endpoints. On a white card a
+         near-black groove reads as a thick black arc, so both are routed through
+         custom properties that the light theme re-points. */
+      track: 'var(--dsau-track, #1C2834)', barMute: 'var(--dsau-barmute, #4E6E82)', ink: 'var(--dsau-chip-solid, #0A0E13)',
       textHi: 'var(--dsw-alias-label-primary, #EBF1F3)',
       textMd: 'var(--dsw-alias-label-secondary, #A2B3BF)',
       textLo: 'color-mix(in srgb, var(--dsw-alias-label-secondary, #A2B3BF) 75%, var(--dsw-alias-label-primary, #EBF1F3))',
@@ -1102,7 +1106,11 @@ window.__ModuleLoader__.load({
 
     /* ============ CSS — "Precision Instrument" scale ============ */
     const css = `
-      .dsau-root{height:100%;overflow:auto;box-sizing:border-box;padding:0 clamp(16px,2.4vw,32px) 20px;background:var(--dsw-alias-bg-base,#0A0E13);color:${C.textMd};font-size:14px;line-height:1.6}
+      /* Every colour below is expressed as a custom property so the light theme
+         can be re-pointed in ONE block instead of at seventy call sites. The
+         dark values are the defaults; the "light theme" section at the bottom of
+         this sheet overrides them. */
+      .dsau-root{--dsau-heat0:#16212B;--dsau-heat1:#2A4A3A;--dsau-heat2:#3E7150;--dsau-heat3:#5EA268;--dsau-heat4:#CBF27E;--dsau-track:#1C2834;--dsau-chip-bg:#1C2834;--dsau-chip-solid:#0A0E13;--dsau-chrome-bg:linear-gradient(to bottom,rgba(10,14,19,.94),rgba(10,14,19,.66) 60%,transparent);--dsau-shadow:0 1px 2px rgba(0,0,0,0);height:100%;overflow:auto;box-sizing:border-box;padding:0 clamp(16px,2.4vw,32px) 20px;background:var(--dsw-alias-bg-base,#0A0E13);color:${C.textMd};font-size:14px;line-height:1.6}
       .dsau-root *{box-sizing:border-box;margin:0;padding:0}
       .dsau-root ::selection{background:${C.signalDeep};color:${C.textHi}}
 
@@ -1195,7 +1203,7 @@ window.__ModuleLoader__.load({
       /* grid + panels */
       .dsau-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;margin-bottom:16px}
       .dsau-s4{grid-column:span 4}.dsau-s6{grid-column:span 6}.dsau-s8{grid-column:span 8}.dsau-s12{grid-column:span 12}
-      .dsau-panel{position:relative;min-width:0;background:${C.surface};border:1px solid ${C.lineSoft};border-radius:14px;padding:15px 17px 16px;display:flex;flex-direction:column;transition:border-color .25s ${C.ease};animation:dsau-rise .62s ${C.ease} both}
+      .dsau-panel{position:relative;min-width:0;background:${C.surface};border:1px solid ${C.lineSoft};border-radius:14px;padding:15px 17px 16px;display:flex;flex-direction:column;box-shadow:var(--dsau-shadow);transition:border-color .25s ${C.ease},box-shadow .25s ${C.ease};animation:dsau-rise .62s ${C.ease} both}
       .dsau-panel:hover{border-color:${C.line}}
       .dsau-grid.g1 .dsau-panel:nth-child(1){animation-delay:.08s}
       .dsau-grid.g1 .dsau-panel:nth-child(2){animation-delay:.14s}
@@ -1323,11 +1331,11 @@ window.__ModuleLoader__.load({
       .dsau-heat-grid{display:grid;grid-template-columns:44px repeat(12,minmax(18px,1fr));grid-auto-rows:minmax(10px,1fr);gap:4px;align-items:stretch;min-width:300px;height:100%}
       .dsau-heat-col{font-family:${C.mono};font-size:10px;color:${C.textFaint};text-align:center;align-self:end}
       .dsau-heat-row{font-size:11px;color:${C.textLo};text-align:right;padding-right:4px;white-space:nowrap;align-self:center}
-      .dsau-heat-cell{height:auto;min-height:10px;border-radius:3px;background:#16212B;border:1px solid ${C.lineSoft};transition:transform .15s ${C.ease},border-color .15s ${C.ease};cursor:default}
-      .dsau-heat-cell[data-lv="1"]{background:#2A4A3A}
-      .dsau-heat-cell[data-lv="2"]{background:#3E7150}
-      .dsau-heat-cell[data-lv="3"]{background:#5EA268}
-      .dsau-heat-cell[data-lv="4"]{background:#CBF27E}
+      .dsau-heat-cell{height:auto;min-height:10px;border-radius:3px;background:var(--dsau-heat0,#16212B);border:1px solid ${C.lineSoft};transition:transform .15s ${C.ease},border-color .15s ${C.ease};cursor:default}
+      .dsau-heat-cell[data-lv="1"]{background:var(--dsau-heat1,#2A4A3A)}
+      .dsau-heat-cell[data-lv="2"]{background:var(--dsau-heat2,#3E7150)}
+      .dsau-heat-cell[data-lv="3"]{background:var(--dsau-heat3,#5EA268)}
+      .dsau-heat-cell[data-lv="4"]{background:var(--dsau-heat4,#CBF27E)}
       .dsau-heat-cell:hover,.dsau-heat-cell:focus-visible{transform:scale(1.14);border-color:${C.textHi};outline:none}
       .dsau-heat-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:11px;color:${C.textFaint}}
       .dsau-heat-peak b{font-family:${C.mono};color:${C.signal};font-weight:600}
@@ -1431,7 +1439,7 @@ window.__ModuleLoader__.load({
          two different footers at two different heights was what made a row of
          cards look like five unrelated widgets. */
       .dsau-qmeta{display:flex;align-items:baseline;gap:6px;flex-wrap:nowrap;margin-top:auto;padding-top:6px;border-top:1px dashed ${C.line};font-size:10px;color:${C.textFaint};font-family:${C.mono};min-width:0;overflow:hidden}
-      .dsau-qmeta-l{padding:1px 5px;border-radius:4px;background:${C.track};color:${C.textLo};letter-spacing:.02em;flex:0 0 auto;white-space:nowrap}
+      .dsau-qmeta-l{padding:1px 5px;border-radius:4px;background:var(--dsau-chip-bg,#1C2834);color:${C.textLo};letter-spacing:.02em;flex:0 0 auto;white-space:nowrap}
       .dsau-qmeta-v{color:${C.textMd};font-variant-numeric:tabular-nums;flex:0 0 auto;font-size:11px;font-weight:600}
       .dsau-qmeta-s{margin-left:auto;color:${C.textFaint};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
       .dsau-qmeta .sep{color:${C.lineStrong};flex:0 0 auto}
@@ -1448,7 +1456,7 @@ window.__ModuleLoader__.load({
       /* the tracker's own measurement, demoted to the shared meta band */
       .dsau-qlocal{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:5px;border-top:1px dashed ${C.line};font-size:10px;color:${C.textFaint};font-family:${C.mono}}
       .dsau-qlocal .sep{color:${C.lineStrong}}
-      .dsau-qlocal-l{padding:1px 5px;border-radius:4px;background:${C.track};color:${C.textLo};letter-spacing:.02em}
+      .dsau-qlocal-l{padding:1px 5px;border-radius:4px;background:var(--dsau-chip-bg,#1C2834);color:${C.textLo};letter-spacing:.02em}
       .dsau-qlocal-v{color:${C.textMd};font-variant-numeric:tabular-nums}
       /* The spend figure and the local-traffic figure are the same kind of thing
          — one quiet number under the ring — so they share a band, a rule and a
@@ -1578,7 +1586,7 @@ window.__ModuleLoader__.load({
     .dsau-mods.is-editing>.dsau-mod{outline:1px solid ${C.lineSoft};outline-offset:-1px;transition:outline-color .16s ${C.ease}}
     .dsau-mods.is-editing>.dsau-mod:hover{outline-color:${C.lineStrong}}
     .dsau-mods.is-editing>.dsau-mod:focus-visible{outline:2px solid ${C.signal};outline-offset:-1px}
-    .dsau-mod-chrome{position:absolute;top:0;left:0;right:0;height:26px;display:flex;align-items:center;gap:8px;padding:0 8px 0 4px;z-index:8;pointer-events:none;border-radius:16px 16px 0 0;background:linear-gradient(to bottom,rgba(10,14,19,.94),rgba(10,14,19,.66) 60%,transparent);opacity:0;transition:opacity .16s ${C.ease}}
+    .dsau-mod-chrome{position:absolute;top:0;left:0;right:0;height:26px;display:flex;align-items:center;gap:8px;padding:0 8px 0 4px;z-index:8;pointer-events:none;border-radius:16px 16px 0 0;background:var(--dsau-chrome-bg,linear-gradient(to bottom,rgba(10,14,19,.94),rgba(10,14,19,.66) 60%,transparent));opacity:0;transition:opacity .16s ${C.ease}}
       /* The chrome sits ON TOP of the panel, so its module name used to print
          straight over the panel's own title — two nearly identical labels
          overlapping in the same corner. It is scaffolding, not content: it
@@ -1700,6 +1708,72 @@ window.__ModuleLoader__.load({
       .dsau-note{font-size:11px;color:${C.textFaint};margin-top:8px}
       .dsau-empty{padding:48px 24px;text-align:center;color:${C.textFaint};font-size:13px}
       .dsau-meta{font-size:11px;color:${C.textFaint};margin-top:12px;word-break:break-all}
+
+      /* ============ light theme ============
+         In the light theme DSH resolves --dsw-alias-bg-base, -bg-layer-1 and
+         -bg-layer-2 to the SAME #fff, and -border-l1 to black at 4 %. The board
+         therefore drew white cards on a white page with an almost invisible
+         hairline between them, which is why module boundaries disappeared.
+         Every colour in this sheet is expressed through those tokens, so fixing
+         it means re-pointing the tokens inside the board's own scope rather
+         than editing the seventy places that read them:
+           - the page becomes the neutral-bluish-75 canvas dsh-context uses,
+           - the cards stay white and gain a real shadow,
+           - inner cards (quota, KPI) drop to a faint grey so they read against
+             the white panel that holds them,
+           - hairlines go to 10 % black, and
+           - the lime signal, which is fine as a fill but nearly invisible as
+             small text on white, is darkened where it is used as type. */
+      body:not([data-ds-dark-theme]) .dsau-root{
+        --dsw-alias-bg-base:var(--dsw-static-neutral-bluish-75,#f1f3f5);
+        --dsw-alias-bg-layer-1:#fff;
+        --dsw-alias-bg-layer-2:#f4f6f8;
+        --dsw-alias-border-l1:rgba(16,24,40,.10);
+        --dsw-alias-border-l2:rgba(16,24,40,.18);
+        --dsau-heat0:#eef1f4;--dsau-heat1:#dcebd6;--dsau-heat2:#b6dcab;--dsau-heat3:#87c46e;--dsau-heat4:#5EA268;
+        --dsau-track:#e6eaf0;--dsau-chip-bg:#eef1f4;--dsau-chip-solid:#fff;
+        --dsau-barmute:#b7c2cd;
+        --dsau-chrome-bg:linear-gradient(to bottom,rgba(255,255,255,.96),rgba(255,255,255,.72) 60%,transparent);
+        --dsau-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+      }
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-ov,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-panel{box-shadow:var(--dsau-shadow)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-panel:hover{border-color:var(--dsw-alias-border-l2)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-hero .unit,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-delta.up,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-heat-peak b,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-fpills button.on,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-eyebrow .dot,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-table th[aria-sort="ascending"] .dsau-arrow,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-table th[aria-sort="descending"] .dsau-arrow{color:#4C7C12}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-fpills button.on{background:rgba(94,162,104,.14);border-color:rgba(94,162,104,.42)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-delta.up{background:rgba(94,162,104,.14)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-top::after{background:linear-gradient(to bottom,var(--dsw-alias-bg-base),transparent)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-tt{box-shadow:0 8px 24px rgba(16,24,40,.14)}
+      /* The palette is built for a dark ground: slot 1 is a pale lime that reads
+         as light on #232324 and vanishes as text on #fff. Darkening the whole
+         chip is the wrong move — it also darkens the chip's own background,
+         which is already dark, so the monogram ends up pale-on-dark inside a
+         dark block and becomes unreadable. Instead the chip is INVERTED: a pale
+         tint of its hue as the ground and a deep tint of the same hue as the
+         letters, which is how the reference plugin's chips behave on white.
+         --dsau-hue carries the series colour, set inline at the call site. */
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-mtag{
+        background:color-mix(in srgb,var(--dsau-hue,#CBF27E) 12%,#fff)!important;
+        color:color-mix(in srgb,var(--dsau-hue,#CBF27E) 34%,#0B1520)!important;
+        border-color:color-mix(in srgb,var(--dsau-hue,#CBF27E) 40%,#c6d0da)!important;
+        font-size:10px;
+      }
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-mfill{filter:brightness(.92) saturate(1.15)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-rleg-main i,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-legend i,
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-heat-legend i{filter:brightness(.84) saturate(1.2)}
+      /* legend percentages take their colour from the series hue, so a pale
+         lime percentage would sit on white at 1.3:1. Darkening keeps the hue
+         association that the dot next to it establishes. */
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-rleg-p{filter:brightness(.62) saturate(1.3)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-cx{box-shadow:0 1px 4px rgba(16,24,40,.22)}
+      body:not([data-ds-dark-theme]) .dsau-root .dsau-mod.is-drag-preview{box-shadow:0 18px 48px rgba(16,24,40,.24)}
 
       @media(max-width:1180px){
         .dsau-ov{grid-template-columns:1fr}
@@ -2539,7 +2613,10 @@ window.__ModuleLoader__.load({
     }
 
     /* ============ Heatmap ============ */
-    const HEAT_LEVELS = ['#16212B', '#2A4A3A', '#3E7150', '#5EA268', '#CBF27E'];
+    /* The swatches must match the cells, and the cells are themed (a near-black
+       "empty" square on a white card reads as a hole). Both sides therefore read
+       the same custom properties. */
+    const HEAT_LEVELS = ['var(--dsau-heat0,#16212B)', 'var(--dsau-heat1,#2A4A3A)', 'var(--dsau-heat2,#3E7150)', 'var(--dsau-heat3,#5EA268)', 'var(--dsau-heat4,#CBF27E)'];
     const WEEKDAYS = { en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], zh: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] };
 
     function Heatmap({ heatT, heatC, mode, setTip, clearTip, t, lang }) {
@@ -2944,7 +3021,7 @@ window.__ModuleLoader__.load({
             const tint = tints.model[m.name] || slotColor(0);
             return h('div', { key: m.name, className: 'dsau-mrow' },
               h('div', { className: 'dsau-mrow-top' },
-                h('span', { className: 'dsau-mtag', style: { color: tint, borderColor: tint } }, modelMark(m.name)),
+                h('span', { className: 'dsau-mtag', style: { '--dsau-hue': tint, color: tint, borderColor: tint } }, modelMark(m.name)),
                 h('span', { className: 'dsau-mname' }, m.name),
                 h('span', { className: 'dsau-mval' }, modelMode === 'tokens' ? `${(m.tokens / 1e6).toFixed(2)}M Tokens` : `${m.calls} ${t.callsUnit}`)),
               h('div', { className: 'dsau-mtrack' }, h('div', { className: 'dsau-mfill', style: { width: `${pct}%`, background: tint } })));
